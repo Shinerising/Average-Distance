@@ -1,0 +1,146 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Leave Me Alone</title>
+    <style type="text/css">
+        html {}
+        
+        body {
+            margin: 0;
+            background: #FAFAFA;
+        }
+        
+        #main {
+            width: 800px;
+            height: 400px;
+            margin: 150px auto;
+            position: relative;
+            border: solid 1px black;
+            border-radius: 3px;
+            background: #DDDDDD;
+        }
+        
+        #controlArea {
+            float: left;
+            height: 400px;
+            width: 299px;
+            border-right: 1px solid black;
+            box-shadow: 0px -3px 5px white inset;
+        }
+        
+        #workingArea {
+            float: right;
+            height: 400px;
+            width: 500px;
+            background: #F0F0F0;
+            box-shadow: 0px 3px 5px gray inset;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .dots {
+            border-radius: 50%;
+            background: black;
+            border: 1px solid rgba(100, 100, 100, .5);
+            position: absolute;
+        }
+    </style>
+    <script type="text/javascript">
+        var dot = function (x, y, vx, vy, ax, ay, r) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+            this.vy = vy;
+            this.ax = ax;
+            this.ay = ay;
+            this.r = r;
+        };
+        var dots = new Array;
+        var r = 0,
+            dotsNumber = 8;
+        var areaWidth = 500,
+            areaHeight = 400;
+
+        var stability = 0;
+
+
+        function createDots() {
+            for (i = 0; i < dotsNumber; i++) {
+                dots.push(new dot(Math.random() * areaWidth, Math.random() * areaHeight, 0, 0, 0, 0, r))
+                var elt = document.createElement("div");
+                elt.className = "dots";
+                elt.setAttribute("id", "dot" + i);
+                document.getElementById("workingArea").appendChild(elt);
+            }
+        }
+
+        function drawDots() {
+            for (i = 0; i < dotsNumber; i++) {
+                var elt = document.getElementById("dot" + i);
+                elt.style.left = dots[i].x - dots[i].r + "px";
+                elt.style.top = dots[i].y - dots[i].r + "px";
+                elt.style.width = dots[i].r * 2 + "px";
+                elt.style.height = dots[i].r * 2 + "px";
+            }
+        }
+
+        function moveDots() {
+            for (i = 0; i < dotsNumber; i++) {
+                dots[i].x += dots[i].vx;
+                dots[i].y += dots[i].vy;
+                dots[i].r = r;
+            }
+
+        }
+
+        function checkDots() {
+            stability = 0;
+            for (i = 0; i < dotsNumber; i++) {
+                dots[i].vx = 0;
+                dots[i].vy = 0;
+                for (j = 0; j < dotsNumber; j++) {
+                    if (i != j) {
+                        var dis = Math.sqrt((dots[i].x - dots[j].x) * (dots[i].x - dots[j].x) + (dots[i].y - dots[j].y) * (dots[i].y - dots[j].y));
+                        if (dis < r * 2) {
+                            dots[i].vx += (r * 2 - dis) / dis * (dots[i].x - dots[j].x);
+                            dots[i].vy += (r * 2 - dis) / dis * (dots[i].y - dots[j].y);
+                        }
+                    }
+                    if (dots[i].x - r < 0) dots[i].vx += r - dots[i].x;
+                    else if (dots[i].x + r > areaWidth) dots[i].vx += areaWidth - (dots[i].x + r);
+                    if (dots[i].y - r < 0) dots[i].vy += r - dots[i].y;
+                    else if (dots[i].y + r > areaHeight) dots[i].vy += areaHeight - (dots[i].y + r);
+                }
+                stability += Math.sqrt(dots[i].vx * dots[i].vx + dots[i].vy * dots[i].vy);
+            }
+        }
+
+        function testRun() {
+            moveDots();
+            drawDots();
+            checkDots();
+            if (stability < 10) {
+                r += 0.05;
+            }
+
+            window.setTimeout(testRun, 10);
+        }
+    </script>
+</head>
+
+<body>
+    <div id="main">
+        <div id="controlArea"></div>
+        <div id="workingArea"></div>
+    </div>
+
+</body>
+<script type="text/javascript">
+    createDots();
+    window.setTimeout(testRun, 10);
+</script>
+
+
+</html>
