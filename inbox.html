@@ -46,6 +46,55 @@
             border: 1px solid rgba(100, 100, 100, .5);
             position: absolute;
         }
+        
+        .controlList {
+            width: 200px;
+            height: 20px;
+            position: relative;
+            margin: 10px auto;
+            text-align: center;
+        }
+        
+        #controlInputBox {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid gray;
+            margin: 0 5px;
+            padding: 0;
+            outline: none;
+            text-align: center;
+            box-shadow: 0px 2px 3px #DDD inset;
+        }
+        
+        .button {
+            display: inline-block;
+            height: 20px;
+            background: #EEE;
+            border-radius: 3px;
+            border: 1px solid gray;
+            margin: 0 5px;
+            padding: 2px;
+            text-align: center;
+            font-size: 16px;
+            line-height: 20px;
+            font-family: Arial;
+            cursor: pointer;
+            box-shadow: 0px -2px 3px #DDD inset;
+        }
+        
+        .button:not(.disabled):hover {
+            box-shadow: 0px -2px 5px #AAA inset;
+        }
+        
+        .button:not(.disabled):active {
+            box-shadow: 0px 2px 3px #BBB inset;
+        }
+        
+        .disabled {
+            color: gray;
+        }
     </style>
     <script type="text/javascript">
         var dot = function (x, y, vx, vy, ax, ay, r) {
@@ -57,16 +106,22 @@
             this.ay = ay;
             this.r = r;
         };
-        var dots = new Array;
+        var dots;
         var r = 0,
-            dotsNumber = 8;
+            dotsNumber = 3;
         var areaWidth = 500,
             areaHeight = 400;
 
         var stability = 0;
 
+        var nInterId;
+        var isTestRunning = false;
+        var isNewTest = true;
+
 
         function createDots() {
+            dots = new Array;
+
             for (i = 0; i < dotsNumber; i++) {
                 dots.push(new dot(Math.random() * areaWidth, Math.random() * areaHeight, 0, 0, 0, 0, r))
                 var elt = document.createElement("div");
@@ -100,6 +155,12 @@
             for (i = 0; i < dotsNumber; i++) {
                 dots[i].vx = 0;
                 dots[i].vy = 0;
+
+                if (dots[i].x < 0) dots[i].x = 0;
+                else if (dots[i].x > areaWidth) dots[i].x = areaWidth;
+                if (dots[i].y < 0) dots[i].y = 0;
+                else if (dots[i].y > areaWidth) dots[i].y = areaWidth;
+
                 for (j = 0; j < dotsNumber; j++) {
                     if (i != j) {
                         var dis = Math.sqrt((dots[i].x - dots[j].x) * (dots[i].x - dots[j].x) + (dots[i].y - dots[j].y) * (dots[i].y - dots[j].y));
@@ -114,6 +175,11 @@
                     else if (dots[i].y + r > areaHeight) dots[i].vy += areaHeight - (dots[i].y + r);
                 }
                 stability += Math.sqrt(dots[i].vx * dots[i].vx + dots[i].vy * dots[i].vy);
+
+                if (dots[i].vx > 10) dots[i].vx = 10;
+                else if (dots[i].vx < -10) dots[i].vx = -10;
+                if (dots[i].vy > 10) dots[i].vy = 10;
+                else if (dots[i].vy < -10) dots[i].vy = -10;
             }
         }
 
@@ -121,25 +187,76 @@
             moveDots();
             drawDots();
             checkDots();
-            if (stability < 10) {
+            if (stability < 5) {
                 r += 0.05;
             }
+            document.getElementById("controlLabel1").innerHTML = "Stability:" + (100 / (stability + 1)).toFixed(2)
+            document.getElementById("controlLabel2").innerHTML = "Radius:" + r.toFixed(2);
+        }
 
-            window.setTimeout(testRun, 10);
+        function testStart() {
+            if (isNewTest) {
+                isNewTest = false;
+                r = 0;
+                createDots();
+                document.getElementById("controlClear").className = "button"
+                document.getElementById("controlNumberSet").className = "button disabled"
+            }
+            if (isTestRunning) {
+                window.clearInterval(nInterId);
+                isTestRunning = false;
+                document.getElementById("controlStart").innerHTML = "Resume";
+            } else {
+                nInterId = window.setInterval(testRun, 10);
+                isTestRunning = true;
+                document.getElementById("controlStart").innerHTML = "Pause";
+            }
+        }
+
+        function testClear() {
+            window.clearInterval(nInterId);
+            document.getElementById("workingArea").innerHTML = "";
+            dots = null;
+            isTestRunning = false;
+            isNewTest = true;
+            document.getElementById("controlStart").innerHTML = "Start";
+            document.getElementById("controlClear").className = "button disabled"
+            document.getElementById("controlNumberSet").className = "button"
+        }
+
+        function numberSet() {
+            if (!isTestRunning && isNewTest) {
+                var val = document.getElementById("controlInputBox").value;
+                dotsNumber = Math.round(val);
+            }
         }
     </script>
 </head>
 
 <body>
     <div id="main">
-        <div id="controlArea"></div>
+        <div id="controlArea">
+            <div class="controlList"></div>
+            <div class="controlList">
+                <div id="controlLabel1"></div>
+            </div>
+            <div class="controlList">
+                <div id="controlLabel2"></div>
+            </div>
+            <div class="controlList">
+                <input id="controlInputBox" value="3"></input>
+                <div id="controlNumberSet" class="button" onclick="numberSet()">SetNum</div>
+            </div>
+            <div class="controlList">
+                <div id="controlStart" class="button" onclick="testStart()">Start</div>
+                <div id="controlClear" class="button disabled" onclick="testClear()">Clear</div>
+            </div>
+        </div>
         <div id="workingArea"></div>
     </div>
 
 </body>
 <script type="text/javascript">
-    createDots();
-    window.setTimeout(testRun, 10);
 </script>
 
 
